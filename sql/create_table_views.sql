@@ -78,7 +78,7 @@ ENGINE = MergeTree
 ORDER BY country_date
 
 --materialized view
-CREATE MATERIALIZED VIEW t_c TO top_counry
+CREATE MATERIALIZED VIEW t_c TO top_country
 AS SELECT
     country,
     countDistinct(session_id) AS cnt,
