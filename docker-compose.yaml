@@ -18,8 +18,11 @@ services:
     ports:
       - "9092:9092"
       - "29092:29092"
+      - "9500:9500"
     volumes:
       - "kafka_data:/bitnami"
+      - "./kafka/jmx_exporter_config.yml:/etc/jmx_exporter/config.yml"
+      - "./kafka/javaagent.jar:/etc/jmx/javaagent.jar"
     env_file: .env
     environment:
       - KAFKA_ENABLE_KRAFT=yes
@@ -33,8 +36,11 @@ services:
       - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
       - ALLOW_PLAINTEXT_LISTENER=yes
       - BITNAMI_DEBUG=yes
+      - KAFKA_JMX_PORT=9404
+      - KAFKA_OPTS=-javaagent:/etc/jmx/javaagent.jar=9500:/etc/jmx_exporter/config.yml
+    
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+      test: ["CMD", "sh", "-c", "unset KAFKA_OPTS && kafka-broker-api-versions.sh --bootstrap-server localhost:9092"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -105,6 +111,16 @@ services:
       - SPARK_WORKER_CORES=2
       - SPARK_WORKER_MEMORY=1g
       - SPARK_MASTER_URL=spark://spark-master:7077
+    networks:
+      - forapi
+  
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus-mon
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml
     networks:
       - forapi
 
